@@ -114,21 +114,28 @@ public class ClientConsole implements ChatIF
    * This method is responsible for the creation of the Client UI.
    *
    * @param args[0] The host to connect to.
+   * @param args[1] The port number to listen on. Defaults to 5555 if no argument is entered.
    */
   public static void main(String[] args) 
   {
     String host = "";
+    int port = 0;
 
 
     try
     {
       host = args[0];
+      port = Integer.parseInt(args[1]);
     }
     catch(ArrayIndexOutOfBoundsException e)
     {
       host = "localhost";
+      port = DEFAULT_PORT;
     }
-    ClientConsole chat= new ClientConsole(host, DEFAULT_PORT);
+    catch(NumberFormatException e) {
+      port = DEFAULT_PORT;
+    }
+    ClientConsole chat= new ClientConsole(host, port);
     chat.accept();  //Wait for console data
   }
 }
