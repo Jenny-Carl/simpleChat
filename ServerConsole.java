@@ -27,13 +27,13 @@ public class ServerConsole implements ChatIF{
 	  public ServerConsole(int port) {
 		  server  = new EchoServer(port, this);
 		  fromConsole = new Scanner(System.in);
-		  /*
+		 
 		  try {
 		      server.listen(); //Start listening for connections
 		    } 
 		    catch (Exception ex) {
 		      System.out.println("ERROR - Could not listen for clients!");
-		    } */
+		    }
 	  }
 	  
 	//Instance methods ************************************************

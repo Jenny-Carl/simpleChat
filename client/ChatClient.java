@@ -26,6 +26,8 @@ public class ChatClient extends AbstractClient
    * the display method in the client.
    */
   ChatIF clientUI; 
+  
+  private String loginID;
 
   
   //Constructors ****************************************************
@@ -38,12 +40,16 @@ public class ChatClient extends AbstractClient
    * @param clientUI The interface type variable.
    */
   
-  public ChatClient(String host, int port, ChatIF clientUI) 
-    throws IOException 
+  public ChatClient(String id, String host, int port, ChatIF clientUI) 
   {
     super(host, port); //Call the superclass constructor
+    loginID = id;
     this.clientUI = clientUI;
-    //openConnection();
+    try {
+		openConnection();
+	} catch (IOException e) {
+		clientUI.display("Cannot open connection.  Awaiting command.");
+	}
   }
 
   
@@ -58,6 +64,20 @@ public class ChatClient extends AbstractClient
   {
     clientUI.display(msg.toString());
   }
+  
+  /**
+	 * Method called after a connection has been established. The default
+	 * implementation does nothing. It may be overridden by subclasses to do
+	 * anything they wish.
+	 */
+    @Override
+	protected void connectionEstablished() {
+    	try {
+			sendToServer("#login<"+loginID+">");
+		} catch (IOException e) {
+			clientUI.display("Unnable to send login id to the server.");
+		}
+	}
 
   /**
    * This method handles all data coming from the UI            
@@ -85,16 +105,26 @@ public class ChatClient extends AbstractClient
   
   private void handleClientCommands(String cmd) {
 	  if(cmd.equals("#quit")) {
+		  clientUI.display("Client is about to quit.");
 		  quit();
-		  System.exit(0);
 	  }
 	  else if(cmd.equals("#logoff")) {
-		  quit();
+		  if(isConnected()) {
+			  try {
+				closeConnection();
+			} catch (IOException e) {
+				clientUI.display("Problem occured while closing the connection with the server");
+			}
+		  }
+		  else {
+			  clientUI.display("Client already disconnected");
+		  }
 	  }
 	  else if (cmd.startsWith("#sethost")){
 		  if(!isConnected()) {
 			  String newHost = cmd.substring(9,(cmd.length()-1));
 			  setHost(newHost);
+			  clientUI.display("Host set to: " + getHost());
 		  }
 		  else{
 			  clientUI.display("ERROR: cannot change host while connected");
@@ -105,6 +135,7 @@ public class ChatClient extends AbstractClient
 			  try {
 				  int newPort = Integer.parseInt(cmd.substring(9,(cmd.length()-1)));
 				  setPort(newPort);
+				  clientUI.display("Port set to: " + getPort());
 			  }
 			  catch(NumberFormatException e) {
 				  clientUI.display("Invalid port number");
@@ -160,7 +191,7 @@ public class ChatClient extends AbstractClient
 	 */
   	@Override
 	protected void connectionClosed() {
-		clientUI.display("Connection to server has been severed");
+		clientUI.display("Connection closed");
 	}
 
 	/**
@@ -173,8 +204,9 @@ public class ChatClient extends AbstractClient
 	 */
   	@Override
 	protected void connectionException(Exception exception) {
-  		clientUI.display("Server shut down");
-  		System.exit(0);
+  		clientUI.display("SERVER SHUTTING DOWN! DISCONNECTING!");
+  		clientUI.display("Abnormal termination of connection.");
+  		//System.exit(0);
 	}
 }
 //End of ChatClient class

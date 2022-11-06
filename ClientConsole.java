@@ -2,7 +2,6 @@
 // "Object Oriented Software Engineering" and is issued under the open-source
 // license found at www.lloseng.com 
 
-import java.io.*;
 import java.util.Scanner;
 
 import client.*;
@@ -50,23 +49,13 @@ public class ClientConsole implements ChatIF
    * @param host The host to connect to.
    * @param port The port to connect on.
    */
-  public ClientConsole(String host, int port) 
+  public ClientConsole(String loginID, String host, int port) 
   {
-    try 
-    {
-      client= new ChatClient(host, port, this);
-      
-      
-    } 
-    catch(IOException exception) 
-    {
-      System.out.println("Error: Can't setup connection!"
-                + " Terminating client.");
-      System.exit(1);
-    }
+	client= new ChatClient(loginID, host, port, this);
+	
+	// Create scanner object to read from console
+	fromConsole = new Scanner(System.in); 
     
-    // Create scanner object to read from console
-    fromConsole = new Scanner(System.in); 
   }
 
   
@@ -113,19 +102,29 @@ public class ClientConsole implements ChatIF
   /**
    * This method is responsible for the creation of the Client UI.
    *
-   * @param args[0] The host to connect to.
-   * @param args[1] The port number to listen on. Defaults to 5555 if no argument is entered.
+   * @param args[0] The client login ID.
+   * @param args[1] The host to connect to.
+   * @param args[2] The port number to listen on. Defaults to 5555 if no argument is entered.
    */
   public static void main(String[] args) 
   {
     String host = "";
     int port = 0;
+    String id = "";
+    
+    try {
+    	id = args[0];
+    }
+    catch(ArrayIndexOutOfBoundsException e) {
+    	System.out.println("ERROR - No login ID specified.  Connection aborted.");
+    	System.exit(0);
+    }
 
 
     try
     {
-      host = args[0];
-      port = Integer.parseInt(args[1]);
+      host = args[1];
+      port = Integer.parseInt(args[2]);
     }
     catch(ArrayIndexOutOfBoundsException e)
     {
@@ -135,7 +134,7 @@ public class ClientConsole implements ChatIF
     catch(NumberFormatException e) {
       port = DEFAULT_PORT;
     }
-    ClientConsole chat= new ClientConsole(host, port);
+    ClientConsole chat= new ClientConsole(id, host, port);
     chat.accept();  //Wait for console data
   }
 }

@@ -54,8 +54,28 @@ public class EchoServer extends AbstractServer
   public void handleMessageFromClient
     (Object msg, ConnectionToClient client)
   {
-    serverUI.display("Message received: " + msg + " from " + client);;
-    this.sendToAllClients(msg);
+	serverUI.display("Message received: " + msg + " from " + client.getInfo("ID"));
+	if(((String) msg).startsWith("#login")) {
+		if(client.getInfo("ID") == null) {
+			String message = (String) msg;
+			String idLogin = message.substring(7, (message.length()-1));
+			
+			client.setInfo("ID", idLogin);
+			serverUI.display(client.getInfo("ID") + " has logged on.");
+			sendToAllClients(client.getInfo("ID") + " has logged on.");
+		}
+		else {
+			try {
+				client.sendToClient("ERROR - Cannot change login ID");
+				client.close();
+			} catch (IOException e) {
+				serverUI.display("Unnable to send message to client");
+			}
+		}
+	}
+	else {
+	    this.sendToAllClients(client.getInfo("ID")+": "+msg);
+	}
   }
   
   /**
@@ -101,6 +121,7 @@ public class EchoServer extends AbstractServer
 			  try {
 				  int newPort = Integer.parseInt(cmd.substring(9,(cmd.length()-1)));
 				  setPort(newPort);
+				  serverUI.display("Port set to: " + getPort());
 			  }
 			  catch(NumberFormatException e) {
 				  serverUI.display("Invalid port number");
@@ -146,6 +167,7 @@ public class EchoServer extends AbstractServer
    */
   protected void serverStopped(){
     serverUI.display("Server has stopped listening for connections.");
+    sendToAllClients("WARNING - The server has stopped listening for connections");
   }
   
   /**
@@ -155,7 +177,7 @@ public class EchoServer extends AbstractServer
    */
   @Override
   protected void clientConnected(ConnectionToClient client) {
-	  serverUI.display("Client: "+client+" connected to the server");
+	  serverUI.display("A new client is attempting to connect to the server.");
   }
 
   /**
@@ -167,7 +189,7 @@ public class EchoServer extends AbstractServer
    */
   @Override
   synchronized protected void clientDisconnected(ConnectionToClient client) {
-	  serverUI.display("Client: "+client+" disconnected from the server");
+	  serverUI.display(client.getInfo("ID") + " disconnected from the server");
   }
 }
 //End of EchoServer class
